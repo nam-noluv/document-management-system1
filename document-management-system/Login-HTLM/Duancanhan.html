@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+
+<h2>Login</h2>
+
+<input type="email" id="email" placeholder="Email"><br><br>
+<input type="password" id="password" placeholder="Password"><br><br>
+
+<label>
+    <input type="checkbox" id="remember"> Remember me
+</label><br><br>
+
+<button id="loginBtn">Login</button>
+<button id="forgotBtn">Forgot Password?</button>
+
+<p id="message"></p>
+
+<script>
+let failedAttempts = 0;
+let lockTime = null;
+
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const message = document.getElementById("message");
+const loginBtn = document.getElementById("loginBtn");
+
+loginBtn.addEventListener("click", login);
+document.getElementById("forgotBtn").addEventListener("click", forgotPassword);
+
+function showMessage(text, color = "red") {
+    message.style.color = color;
+    message.innerText = text;
+}
+
+function login() {
+    let email = emailInput.value.trim();
+    let password = passwordInput.value;
+
+    // Clear message trước mỗi lần test
+    showMessage("");
+
+    // 🔒 Check account lock
+    if (lockTime && Date.now() < lockTime) {
+        showMessage("Account is locked. Try again later.");
+        return;
+    }
+
+    // ❌ Empty
+    if (!email || !password) {
+        showMessage("Required field");
+        return;
+    }
+
+    // ❌ Email format (fix lại regex chuẩn hơn)
+    let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showMessage("Invalid email format");
+        return;
+    }
+
+    // ❌ Password length
+    if (password.length < 8) {
+        showMessage("Password must be at least 8 characters");
+        return;
+    }
+
+    if (password.length > 255) {
+        showMessage("Password must not exceed 255 characters");
+        return;
+    }
+
+    // ❌ Upper + lower
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
+        showMessage("Password must include uppercase and lowercase letters");
+        return;
+    }
+
+    // ✅ Fake account
+    if (email === "test@gmail.com" && password === "Test1234") {
+        showMessage("Login success", "green");
+
+        if (document.getElementById("remember").checked) {
+            localStorage.setItem("email", email);
+        }
+
+        failedAttempts = 0;
+    } else {
+        failedAttempts++;
+        showMessage("Bạn đã nhập sai Email hoặc Password");
+
+        if (failedAttempts >= 5) {
+            lockTime = Date.now() + 30 * 60 * 1000;
+            showMessage("Tài khoản bị khóa trong 30 phút");
+        }
+    }
+}
+
+function forgotPassword() {
+    showMessage("Redirect to Forgot Password page", "blue");
+}
+
+// Load remember
+window.onload = function () {
+    let savedEmail = localStorage.getItem("email");
+    if (savedEmail) {
+        emailInput.value = savedEmail;
+    }
+};
+</script>
+
+</body>
+</html>
